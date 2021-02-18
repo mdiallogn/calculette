@@ -1,0 +1,11 @@
+Warning: TestRig moved to org.antlr.v4.gui.TestRig; calling automatically
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@1e800aaa, i=AdresseType@185a6e9} => @AdresseType@185a6e9
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@1e800aaa, i=AdresseType@185a6e9} => @AdresseType@185a6e9
+x pas trouvé en local
+Recherche de x dans table globale: {x=AdresseType@1e800aaa, i=AdresseType@185a6e9} => @AdresseType@1e800aaa
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@1e800aaa, i=AdresseType@185a6e9} => @AdresseType@185a6e9
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@1e800aaa, i=AdresseType@185a6e9} => @AdresseType@185a6e9

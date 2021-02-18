@@ -1,0 +1,15 @@
+PUSHI 0
+  JUMP 0
+LABEL 0
+READ
+STOREG 0
+
+null
+ PUSHI 3
+PUSHG 0
+MUL 
+ PUSHI 2
+ADD 
+
+  HALT 
+

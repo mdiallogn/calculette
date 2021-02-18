@@ -1,0 +1,12 @@
+Warning: TestRig moved to org.antlr.v4.gui.TestRig; calling automatically
+line 1:10 extraneous input '0' expecting {';', NEWLINE}
+Recherche de x dans table locale: {x=AdresseType@2f4948e4, return=AdresseType@1f2586d6}
+Recherche de return dans table locale: {x=AdresseType@2f4948e4, return=AdresseType@1f2586d6}
+x pas trouvé en local
+Recherche de x dans table globale: {x=AdresseType@22fcf7ab} => @AdresseType@22fcf7ab
+x pas trouvé en local
+Recherche de x dans table globale: {x=AdresseType@22fcf7ab} => @AdresseType@22fcf7ab
+x pas trouvé en local
+Recherche de x dans table globale: {x=AdresseType@22fcf7ab} => @AdresseType@22fcf7ab
+x pas trouvé en local
+Recherche de x dans table globale: {x=AdresseType@22fcf7ab} => @AdresseType@22fcf7ab

@@ -1,0 +1,30 @@
+Warning: TestRig moved to org.antlr.v4.gui.TestRig; calling automatically
+Recherche de i dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@477b4cdf
+Recherche de i dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@477b4cdf
+Recherche de x dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+Recherche de i dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@477b4cdf
+Recherche de i dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@477b4cdf
+Recherche de x dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+Recherche de i dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@477b4cdf
+Recherche de i dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@477b4cdf
+Recherche de x dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+Recherche de i dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+i pas trouvé en local
+Recherche de i dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@477b4cdf
+Recherche de return dans table locale: {x=AdresseType@662ac478, return=AdresseType@6743e411}
+x pas trouvé en local
+Recherche de x dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@3eb25e1a
+x pas trouvé en local
+Recherche de x dans table globale: {x=AdresseType@3eb25e1a, i=AdresseType@477b4cdf} => @AdresseType@3eb25e1a

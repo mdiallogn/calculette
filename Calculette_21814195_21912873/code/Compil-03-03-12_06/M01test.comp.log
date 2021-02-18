@@ -1,0 +1,10 @@
+Warning: TestRig moved to org.antlr.v4.gui.TestRig; calling automatically
+line 1:10 extraneous input '3' expecting {';', NEWLINE}
+k pas trouvé en local
+Recherche de k dans table globale: {i=AdresseType@185a6e9, j=AdresseType@6f03482, k=AdresseType@9d5509a} => @AdresseType@9d5509a
+j pas trouvé en local
+Recherche de j dans table globale: {i=AdresseType@185a6e9, j=AdresseType@6f03482, k=AdresseType@9d5509a} => @AdresseType@6f03482
+i pas trouvé en local
+Recherche de i dans table globale: {i=AdresseType@185a6e9, j=AdresseType@6f03482, k=AdresseType@9d5509a} => @AdresseType@185a6e9
+k pas trouvé en local
+Recherche de k dans table globale: {i=AdresseType@185a6e9, j=AdresseType@6f03482, k=AdresseType@9d5509a} => @AdresseType@9d5509a

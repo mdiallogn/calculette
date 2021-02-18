@@ -1,0 +1,7 @@
+Warning: TestRig moved to org.antlr.v4.gui.TestRig; calling automatically
+y pas trouvé en local
+Recherche de y dans table globale: {y=AdresseType@5b12b668} => @AdresseType@5b12b668
+line 3:8 mismatched input '3' expecting {'-', '*', '/', '+', ')'}
+y pas trouvé en local
+Recherche de y dans table globale: {y=AdresseType@5b12b668} => @AdresseType@5b12b668
+line 3:18 extraneous input ')' expecting {';', NEWLINE}

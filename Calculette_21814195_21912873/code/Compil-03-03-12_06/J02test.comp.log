@@ -1,0 +1,39 @@
+Warning: TestRig moved to org.antlr.v4.gui.TestRig; calling automatically
+x pas trouvé en local
+Recherche de x dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@3eb738bb
+i pas trouvé en local
+Recherche de i dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@5bda8e08
+i pas trouvé en local
+Recherche de i dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@5bda8e08
+x pas trouvé en local
+Recherche de x dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@3eb738bb
+i pas trouvé en local
+Recherche de i dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@5bda8e08
+i pas trouvé en local
+Recherche de i dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@5bda8e08
+xi pas trouvé en local
+Recherche de xi dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@f5958c9
+i pas trouvé en local
+Recherche de i dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@5bda8e08
+xi pas trouvé en local
+Recherche de xi dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@f5958c9
+i pas trouvé en local
+Recherche de i dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@5bda8e08
+j pas trouvé en local
+Recherche de j dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@1e800aaa
+j pas trouvé en local
+Recherche de j dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@1e800aaa
+x pas trouvé en local
+Recherche de x dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@3eb738bb
+j pas trouvé en local
+Recherche de j dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@1e800aaa
+j pas trouvé en local
+Recherche de j dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@1e800aaa
+xj pas trouvé en local
+Recherche de xj dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@233795b6
+j pas trouvé en local
+Recherche de j dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@1e800aaa
+xj pas trouvé en local
+Recherche de xj dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@233795b6
+j pas trouvé en local
+Recherche de j dans table globale: {xi=AdresseType@f5958c9, xj=AdresseType@233795b6, x=AdresseType@3eb738bb, i=AdresseType@5bda8e08, j=AdresseType@1e800aaa} => @AdresseType@1e800aaa

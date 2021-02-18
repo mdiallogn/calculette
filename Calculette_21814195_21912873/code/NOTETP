@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="fr-FR"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+      <title>TP5 à TP9 L3 Langage et Compilation</title>
+      <link rel="stylesheet" href="NOTETP_fichiers/styletp.css" type="text/css" media="screen, print">
+  </head>
+
+  <body>
+    <h1>TP5 à TP9 -- L3 -- Langage et Compilation</h1>
+    <h1>Compiler un langage de calculatrice scientifique en MVàP</h1>
+
+    <h2>Objectifs et Rythme de cette série de TP</h2>
+    <p>
+L'objectif principal de cette série de TP est de vous aider à finaliser un travail qui tiendra lieu de DM.
+<br>
+
+Nous basculons dans une organisation moins rigide afin de vous permettre
+ d'avancer à votre rythme. La dernière semaine sera l'occasion de
+ nous expliquer plus en détail votre travail lors d'une petite 
+soutenance afin que nous l'évaluions de manière sommative. 
+<br>
+
+Nous allons toutefois vous fournir le moyen de vérifier seul 
+l'avancement de votre travail en auto-correction avec une série de 
+tests. Des tests identiques et d'autres similaires seront appliqués 
+automatiquement à votre travail pour déterminer une partie importante de
+ votre note finale. Pour plus de détails concernant l'évaluation de 
+votre travail reportez vous svp à la page du cours, où plus de détails 
+seront apportés à ce sujet.
+<br>
+
+	    L'organisation du cours et des TDs vous permet de traiter les sections suivantes dès le TP indiqué entre parenthèse.
+	    </p>
+
+<ol>
+  <li><a href="#arithcalcul">Calcul d'expression arithmétique (TP5)</a>
+  </li><li><a href="#arithmvap">Calcul d'expression arithmétique sur la MVàP (TP5)</a>
+  </li><li><a href="#varglob">Gestion des variables globales (TP6)</a>
+  </li><li><a href="#IOmonad">Gestion des entrées et sorties (TP6)</a>
+  </li><li><a href="#While">Le while (TP6)</a>
+  </li><li><a href="#bloc">Regroupements (blocs)(TP6)</a> 
+  </li><li><a href="#conds">Conditions simples (TP6)</a>
+  </li><li><a href="#boolExpr">Combinaisons booléennes (TP6)</a>
+  </li><li><a href="#if">Branchements (if) (TP6+)</a>
+  </li><li><a href="#for">Le for (TP6+)</a>
+  </li><li><a href="#anaFunc">Analyse syntaxique de fonctions (TP7)</a>
+  </li><li><a href="#blocActivation">Bloc d'activation (variables locales etc)(TP7)</a>
+  </li><li><a href="#float">Cas de base des flottants (TP8)</a>
+  </li><li><a href="#classique">Quelques programmes classiques (TP8)</a>
+  </li><li><a href="#etc">Autres améliorations (TP8 / TP9)</a>
+</li></ol>
+
+    <h2>Rappels sur la manière d'utiliser antlr</h2>
+    <ul>
+  <li>
+	On commence par faire en sorte que java sache où trouver antlr en configurant le <code>CLASSPATH</code> correctement (mettre la ligne adéquate dans <code>.bashrc</code> est une bonne idée).
+      </li><li>
+On génère du code java pour le lexeur et le parseur à partir de la grammaire antlr (ma_grammaire.g4) avec
+<pre><span class="comint-highlight-input">java org.antlr.v4.Tool ma_grammaire.g4</span></pre>
+
+qui est équivalent à&nbsp;:
+<pre><span class="comint-highlight-input">antlr4 ma_grammaire.g4</span> </pre>
+      </li><li>
+On compile les fichiers ma_grammaire*.java générés.
+<pre><span class="comint-highlight-input">javac ma_grammaire*.java</span></pre>
+      </li><li>
+On analyse l'expression contenue dans fichierentre et on visualise sa structure grammaticale:
+<pre>j<span class="comint-highlight-input">ava org.antlr.v4.runtime.misc.TestRig ma_grammaire 'monaxiome' -gui &lt; fichierentre</span></pre>
+      ou
+<pre><span class="comint-highlight-input">antlr4-grun ma_grammaire 'monaxiome' -gui &lt; fichierentre</span></pre>
+	ou
+	<pre><span class="comint-highlight-input">antlr4-grun ma_grammaire 'monaxiome' -gui</span></pre>
+	  avec saisie des entrées et fin par control D (pour générer EOF).<br><br>
+	
+Changer l'axiome (règle de départ du parseur) permet de tester directement une partie bien choisie de la grammaire.
+<br>
+
+	    Dans un second temps, on pourra enlever l'option <code>-gui</code> et rediriger la sortie standard vers un fichier (avec <code>&gt; fichiersortie</code>)
+
+      </li>
+      </ul>
+
+<h2>De l'intérêt de bénéficier d'un éditeur correct</h2>
+Vous allez multiplier les langages dans le même fichier : une grammaire 
+en g4 décorée avec des morceaux de java.
+Un éditeur correct saura -- hormis peut-être quelques exemples 
+pathologiques <!-- avec de l'échappement --> -- indenter et colorier ce fichier.
+Ceci permettra de trouver plus facilement des bugs. Les enseignants 
+acceptent de tenter de vous aider dans de telles conditions. 
+
+Il y a un éditeur dédié pour antlr à l'université. Alternativement, vous
+ pouvez utiliser emacs en ajoutant dans son fichier de configuration (le
+ fichier <code>~/.emacs</code>)
+le code suivant.
+<pre>(add-to-list 'auto-mode-alist '("\\.g4\\'" . antlr-mode))
+</pre>
+Pour ceux qui n'ont pas besoin de M-x Doctor, on peut configurer Vim 
+en écrivant le code ci-dessous dans <code>.vimrc</code>:
+<pre>au BufRead,BufNewFile *.g4 set filetype=antlr4
+</pre>
+<a id="arithcalcul">
+<h2>A - Une calculette</h2>
+</a>
+
+Soit la grammaire attribuée suivante qui permet d'analyser des sommes
+et produits d'entiers.
+
+<pre><span class="antlr-ruledef">grammar</span> <span class="antlr-tokenref">Calculette</span><span class="antlr-keyword">;</span>
+
+<span class="antlr-ruledef">start</span>
+    <span class="antlr-keyword">:</span> <span class="antlr-ruleref">expr</span> <span class="antlr-tokenref">EOF</span><span class="antlr-keyword">;</span>
+
+<span class="antlr-ruledef">expr</span>
+    <span class="antlr-keyword">:</span> <span class="antlr-ruleref">expr</span> <span class="string">'*'</span> <span class="antlr-ruleref">expr</span>
+    <span class="antlr-keyword">|</span> <span class="antlr-ruleref">expr</span> <span class="string">'+'</span> <span class="antlr-ruleref">expr</span>
+    <span class="antlr-keyword">|</span> <span class="antlr-tokenref">ENTIER</span>
+    <span class="antlr-keyword">;</span>
+
+<span class="comment-delimiter">// </span><span class="comment">lexer
+</span><span class="antlr-tokendef">NEWLINE</span> <span class="antlr-keyword">:</span> <span class="string">'\r'</span>? <span class="string">'\n'</span>  -&gt; <span class="antlr-ruleref">skip</span><span class="antlr-keyword">;</span>
+
+<span class="antlr-tokendef">WS</span> <span class="antlr-keyword">:</span>   <span class="antlr-keyword">(</span><span class="string">' '</span><span class="antlr-keyword">|</span><span class="string">'\t'</span><span class="antlr-keyword">)+</span> -&gt; <span class="antlr-ruleref">skip</span>  <span class="antlr-keyword">;</span>
+
+<span class="antlr-tokendef">ENTIER</span> <span class="antlr-keyword">:</span> <span class="antlr-keyword">(</span><span class="string">'0'</span>..<span class="string">'9'</span><span class="antlr-keyword">)+</span>  <span class="antlr-keyword">;</span>
+
+<span class="antlr-tokendef">UNMATCH</span> <span class="antlr-keyword">:</span> . -&gt; <span class="antlr-ruleref">skip</span> <span class="antlr-keyword">;</span>
+</pre>
+  
+<div class="question">Montrer que cette grammaire est ambiguë.</div>
+
+<p>
+En pratique, ANTLR4 va autoriser cette grammaire et produire un analyseur.
+</p>
+
+<div class="etape">Compiler cette grammaire et la tester avec
+  <code>antlr4-grun</code> sur l'exemple <code>4 + 5 * 6 + 4</code></div>
+
+
+<p> On décide alors de modifier le choix de la règle <code>expr</code>
+  par:</p>
+
+  <pre><span class="antlr-ruledef">expr</span>
+   <span class="antlr-keyword">:</span> <span class="antlr-ruleref">expr</span> <span class="string">'+'</span><span class="antlr-ruleref">expr</span>
+   <span class="antlr-keyword">|</span> <span class="antlr-ruleref">expr</span> <span class="string">'*'</span> <span class="antlr-ruleref">expr</span>
+   <span class="antlr-keyword">|</span> <span class="antlr-tokenref">ENTIER</span>
+   <span class="antlr-keyword">;</span>
+</pre>
+
+<div class="etape">Recompiler cette grammaire et la tester avec
+  <code>antlr4-grun</code> sur l'exemple <code>4 + 5 * 6 + 4</code>. Commenter.</div>
+  
+<div class="question">Enrichir la grammaire avec les expressions parenthésées</div>
+
+<div class="question">Compléter cette grammaire à l'aide d'annotations
+  pour effectuer le calcul de l'expression et ajouter le support de la
+  soustraction et de la division.</div>
+
+
+Il est probable que vous ayez besoin d'une fonction pour vous faciliter la vie.
+Vous pouvez ajouter des variables ou des fonctions au parseur dans une section de code java après le nom de la grammaire.
+<pre>@parser::members {
+
+    private int evalexpr (int x, String op, int y) {
+        if ( op.equals("*") ){
+            return x*y;
+        } else if ( op.equals("+") ){
+            return x+y;
+        } else {
+           System.err.println("Opérateur arithmétique incorrect : '"+op+"'");
+           throw new IllegalArgumentException("Opérateur arithmétique incorrect : '"+op+"'");
+        }
+    }
+        
+}
+</pre>
+
+
+On notera qu'il est possible de récupérer le contenu d'un jeton (token) à
+  l'aide de la méthode suivante:
+
+<pre><span class="antlr-ruledef">expr</span>
+    <span class="antlr-keyword">:</span> <span class="antlr-default">a</span><span class="antlr-default">=</span><span class="antlr-ruleref">expr</span> <span class="antlr-default">op=</span><span class="antlr-keyword">(</span><span class="string">'*'</span><span class="antlr-keyword">|</span><span class="string">'/'</span><span class="antlr-keyword">)</span> <span class="antlr-default">b</span><span class="antlr-default">=</span><span class="antlr-ruleref">expr</span> {System.out.println(<span class="antlr-keyword">$op</span>.text);}</pre>
+
+On peut de manière similaire récupérer la valeur du jeton comme entier (si adapté) avec <code>.int</code>.
+Pour déboguer on peut aussi accéder à la ligne et à la position (<code>.line</code> et <code>.pos</code>).
+
+<div class="etape">Tester de manière approfondie <!-- extensivement --> avant de passer à la suite
+<br>
+On s'inspire de la précédence en java : multiplication et division 
+entière (à précédence égale) puis addition et soustraction binaire (à 
+précédence égale).
+À précédence égale, on évalue de la gauche vers la droite.
+
+Vous pouvez vérifier avec les exemples suivants qui doivent tous donner 
+la réponse finale.
+<pre>42
+24+24-6
+5*8+2*1
+6*4/5+38
+42+1+2+-3
+5*8+2*-1/-1
+(5*6*7*11 + 2)/11*5-1008
+(5*6*7*11 + 2)/(11*5)
+(5*6*7*11 + 2)/11/5
+(5*6*7*11 + 2)/(11/5)-1114
+</pre>
+</div>
+
+<a id="arithmvap">
+<h2>B - Génération de code MVàP </h2>
+</a>
+
+
+<div class="etape"> 
+Dans un premier temps, on téléchargera les <a href="https://terrier.users.greyc.fr/LangCompil/MVaP/sources-MVaP-2.1.tgz">sources de la MVaP</a>. On suivra les instructions et les tests pour s'assurer de bien comprendre son fonctionnement.
+</div>
+
+<p>
+  On souhaite maintenant générer du code MVàP. Pour cela, on va
+  associer à chaque expression une chaîne de caractères contenant le
+  code pour l'exécution de cette expression.
+</p>
+ 
+<p> Note : à la place de <code>antlr4-grun</code> qui, essentiellement, crée un programme principal qui effectue l'analyse lexicale et syntaxique,
+on peut définir son propre programme principal <code>MainCalculette.java</code> instanciant un lexer, puis un parser.
+
+  </p><pre><span class="keyword">import</span> <span class="constant">java</span>.<span class="constant">io</span>.*;
+<span class="keyword">import</span> <span class="constant">org</span>.<span class="constant">antlr</span>.<span class="constant">v4</span>.<span class="constant">runtime</span>.*;
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="type">MainCalculette</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="type">void</span> <span class="function-name">main</span>(<span class="type">String</span> <span class="variable-name">args</span>[]) <span class="keyword">throws</span> <span class="type">Exception</span> {
+        <span class="type">CalculetteLexe</span><span class="type">r</span> <span class="variable-name">lex</span>;
+        <span class="keyword">if</span> (args.length == 0) 
+            lex = <span class="keyword">new</span> <span class="type">CalculetteLexer</span>(<span class="keyword">new</span> <span class="type">ANTLRInputStream</span>(System.in));
+        <span class="keyword">else</span> 
+            lex = <span class="keyword">new</span> <span class="type">CalculetteLexer</span>(<span class="keyword">new</span> <span class="type">ANTLRFileStream</span>(args[0]));
+            
+        <span class="type">CommonTokenStream</span> <span class="variable-name">tokens</span> = <span class="keyword">new</span> <span class="type">CommonTokenStream</span>(lex);
+        
+        <span class="type">CalculetteParser</span> <span class="variable-name">parser</span> = <span class="keyword">new</span> <span class="type">CalculetteParser</span>(tokens);
+        <span class="keyword">try</span> {
+            parser.start();    <span class="comment">// start l'axiome de la grammaire </span>
+        } <span class="keyword">catch</span> (<span class="type">RecognitionException</span> <span class="variable-name">e</span>) {
+            e.printStackTrace();
+        } <span class="keyword">catch</span> (<span class="type">Exception</span> <span class="variable-name">e</span>) {
+            e.<span class="type">printStackTrace</span>();
+        }
+     
+    }
+}</pre>
+<p></p>
+
+<div class="question">Modifier la grammaire précédente pour générer du
+  code MVàP effectuant le calcul de l'expression</div>
+
+<div class="etape">Tester  de manière approfondie <!-- extensivement --> avant de passer à la suite. 
+	Vous devez être capable:
+	<ul>
+		<li> de compiler votre fichier g4</li>
+		<li> d’exécuter la calculette pour obtenir le code MVàP </li>
+		<li> d’assembler le code MVàP </li>
+		<li> d’interpréter le code obtenu pour afficher la valeur de l'expression </li>
+	</ul>
+
+Cette valeur est normalement la réponse à la question. Le procédé étant
+ un peu long, on a oublié la question en route mais on reconnaît de 
+toute façon la réponse.
+<br>
+<strong> Ces opérations sont exigibles lors de la soutenance.</strong>
+</div>
+
+<a id="varglob">
+ <h2>C - Traitement des variables</h2>
+</a>
+
+On va enrichir le langage de notre machine à calculer scientifique pour autoriser les variables globales.
+On pourra déclarer une variable (entière) x avec l'instruction <code>int x</code>. Une telle variable a une valeur de 0 par défaut.
+Pour l'assignation on fera par exemple <code>x=3</code> ou encore  <code>x=3+y</code> (on accède à la valeur d'une variable -- ici y -- via son identifiant).
+On va aussi considérer des variables réelles, qu'on déclarera de manière similaire en écrivant <code>float r </code>. Pour les calculs et affectations, il faudra dans un premier temps faire attention à ce que les types soient les mêmes.   
+
+
+L'analyse syntaxique de l'emploi des variables est assurée par des règles supplémentaires :
+    <pre><span class="antlr-ruledef">decl</span> <span class="antlr-keyword">returns</span> [ String code ] 
+    <span class="antlr-keyword">:</span>
+        <span class="antlr-tokenref">TYPE</span> <span class="antlr-tokenref">IDENTIFIANT</span> <span class="antlr-ruleref">finInstruction</span>
+        {
+            <span class="comment-delimiter">// </span><span class="comment">à compléter
+</span>        }
+    <span class="antlr-keyword">;</span> 
+
+<span class="antlr-ruledef">instruction</span> <span class="antlr-keyword">returns</span> [ String code ] 
+    <span class="antlr-keyword">:</span> <span class="antlr-ruleref">expression</span> <span class="antlr-ruleref">finInstruction</span> 
+        { 
+            <span class="comment-delimiter">// </span><span class="comment">à compléter
+</span>        }
+    <span class="antlr-keyword">|</span> <span class="antlr-ruleref">assignation</span> <span class="antlr-ruleref">finInstruction</span>
+        { 
+            <span class="comment-delimiter">// </span><span class="comment">à compléter
+</span>        }
+    <span class="antlr-keyword">|</span> <span class="antlr-ruleref">finInstruction</span>
+        {
+            <span class="antlr-keyword">$code</span>=<span class="string">""</span>;
+        }
+    <span class="antlr-keyword">;</span>
+
+<span class="antlr-ruledef">assignation</span> <span class="antlr-keyword">returns</span> [ String code ] 
+    <span class="antlr-keyword">:</span> <span class="antlr-tokenref">IDENTIFIANT</span> <span class="string">'='</span> <span class="antlr-ruleref">expression</span>
+        {  
+            <span class="comment-delimiter">// </span><span class="comment">à compléter
+</span>        }
+    <span class="antlr-keyword">;</span>
+
+<span class="antlr-tokendef">finInstruction</span> <span class="antlr-keyword">:</span> ( <span class="string">NEWLINE</span> <span class="antlr-keyword">|</span> <span class="string">';'</span> )+ <span class="antlr-keyword">;</span>
+
+<span class="comment-delimiter">// </span><span class="comment">lexer
+</span><span class="antlr-tokendef">TYPE</span> <span class="antlr-keyword">:</span> <span class="string">'int'</span> <span class="antlr-keyword">|</span> <span class="string">'float'</span> <span class="antlr-keyword">;</span>
+
+<span class="comment-delimiter">//</span><span class="comment">...
+</span></pre>
+
+On ajoute une règle d'entrée <span class="antlr-ruledef">calcul</span>
+qui se compose d'une suite de déclarations suivi d'une suite
+d'instructions. Les éléments @<span class="antlr-ruleref">init</span>
+et @<span class="antlr-ruleref">after</span> permettent d'indiquer
+respectivement des actions à effectuer avant et après l'application de le règle.
+
+<pre><span class="antlr-ruledef">calcul</span> <span class="antlr-keyword">returns</span> [ String code ] 
+@<span class="antlr-ruleref">init</span>{ <span class="antlr-keyword">$code</span> = <span class="keyword">new</span> <span class="type">String</span>(); }   <span class="comment-delimiter">// </span><span class="comment">On initialise code, pour ensuite l'utiliser comme accumulateur 
+</span>@<span class="antlr-ruleref">after</span>{ System.out.println(<span class="antlr-keyword">$code</span>); }
+    <span class="antlr-keyword">:</span>   <span class="antlr-keyword">(</span><span class="antlr-ruleref">decl</span> { <span class="antlr-keyword">$code</span> += <span class="antlr-keyword">$decl</span>.code; }<span class="antlr-keyword">)*</span>        
+        
+        <span class="antlr-tokenref">NEWLINE</span>*
+        
+        <span class="antlr-keyword">(</span><span class="antlr-ruleref">instruction</span> { <span class="antlr-keyword">$code</span> += <span class="antlr-keyword">$instruction</span>.code; }<span class="antlr-keyword">)*</span>
+
+        { <span class="antlr-keyword">$code</span> += <span class="string">"  HALT\n"</span>; } 
+    <span class="antlr-keyword">;</span>
+</pre>
+
+
+
+<div class="question">Compléter votre grammaire antlr en ajoutant aux bons endroits ces règles et en modifiant
+  la règle d'entrée pour utiliser <span class="antlr-ruledef">calcul</span>.
+  On fera attention à bien choisir le comportement adéquat dans le lexer pour le jeton <span class="antlr-tokenref">NEWLINE</span>
+ qui peut servir maintenant à terminer une instruction. Attention aussi à
+ l'ordre des déclarations dans le lexer : les mots-clés réservés ne 
+peuvent pas être des identifiants. 
+</div>
+
+
+<p>
+Pour traiter des variables globales (ainsi que plus tard des paramètres 
+de fonctions qu'on appellera variables locales) il faut avoir une table 
+de symboles (des tables pour plus tard). Comme nos variables sont 
+typées, il va falloir stocker pour chaque variable, non seulement son 
+adresse dans la pile mais aussi son type. Pour ceci nous vous 
+fournissons une classe <a href="https://terrier.users.greyc.fr/LangCompil/MVaP/AdresseType.java"><code>AdresseType</code></a>, une classe <a href="https://terrier.users.greyc.fr/LangCompil/MVaP/TableSymboles.java"><code>TableSymboles</code></a> et une classe <a href="https://terrier.users.greyc.fr/LangCompil/MVaP/TablesSymboles.java"><code>TablesSymboles</code></a>.
+ Pour l'instant seules les 2 premières sont utiles : dans l'immédiat vous
+ pouvez lire rapidement leurs fichiers et ignorer la dernière. Les deux 
+dernières encapsulent des <span class="antlr-keyword">Hashmap</span> qui modéliseront la (les) table(s) de symboles lors de la compilation. 
+</p>
+
+<p>On va utiliser directement la classe tablesSymboles (plusieurs 
+tables), qui en l'absence de fonctions ne fera rien de plus que la 
+classe tableSymbole (une seule table). Pour cela, il suffit d'ajouter au
+ début du fichier g4 le code suivant. Alternativement, enlever les s 
+adéquat ci-dessous que vous ajouterez plus tard.
+
+</p>
+<pre>@<span class="antlr-ruleref">members</span> {
+   <span class="keyword">private</span> <span class="type">TablesSymboles</span> <span class="variable-name">tablesSymboles</span> = <span class="keyword">new</span> <span class="type">TablesSymboles</span>();
+        }
+</pre>
+
+On peut ensuite ajouter une variable entière à la table (ne pas oublier 
+en même temps de réserver un espace dans la pile) à l'aide de:
+<pre>tablesSymboles.putVar(<span class="antlr-keyword">$IDENTIFIANT</span>.text,<span class="string">"int"</span>);</pre>
+
+Et récupérer son adresse et son type avec:
+<pre><span class="type">AdresseType</span> <span class="variable-name">at</span> = tablesSymboles.getAdresseType(<span class="antlr-keyword">$IDENTIFIANT</span>.text);
+</pre>
+
+<div class="question">Ajoutez la génération de code pour les variables globales (entières seulement pour l'instant).
+</div>
+
+<div class="question">On change un petit peu la syntaxe de notre 
+calculette. On autorise maintenant une déclaration et assignation par un
+ entier en une seule instruction. 
+Par exemple, <code>int x = 42</code>. Modifiez votre grammaire en conséquence.
+</div>
+
+
+<a id="IOmonad">
+ <h2>D - Traitement des entrées / sorties</h2>
+</a>
+
+Maintenant que nous avons des variables, nous allons ajouter la 
+possibilité pour la calculatrice scientifique de lire une valeur avec les instruction <code> read(x) </code> qui lit l'entier saisit par l'utilisateur et donne cette valeur à la variable x. 
+
+Nous ajoutons son pendant <code> write(x) </code> qui affiche la valeur
+ de x.
+
+Pour l'instant, vous pouvez travailler uniquement avec des variables 
+entières, mais à terme on travaillera également avec les flottants.
+
+<div class="question">Ajoutez la génération de code pour ces deux instructions.
+</div>
+
+<div class="etape">À partir de maintenant, vous pouvez tester votre travail. Des <i>benchmarks</i> sont disponibles  
+  <a href="https://terrier.users.greyc.fr/LangCompil/BMs/">ici</a> (le
+  préfixe du nom d'un fichier correspond normalement au nom de section de ce
+  TP). Un script automatique de test est disponible à l'emplacement
+  <kbd>/home/etudiants/data/l3/compil</kbd> ; vous pouvez consulter le ReadMe
+  pour en savoir plus sur son fonctionnement.
+</div>
+
+<!-- TODO: autocor -->
+
+<a id="While">
+<h2>E - Traitement du « while »</h2>
+</a>
+
+<div class="question">Ajoutez la génération de code pour le « while  (...) ...  ». 
+</div>
+<div class="Indication"> Utilisez la méthode <span class="variable-name">nextLabel</span> pour générer les numéros d'étiquettes :
+    <pre>@<span class="antlr-ruleref">members</span> {
+    <span class="keyword">private</span> <span class="type">int</span> <span class="variable-name">_cur_label</span> = 0;
+    <span class="comment-delimiter">/** </span><span class="comment">générateur de nom d'étiquettes */</span>
+    <span class="keyword">private</span> <span class="type">int</span> <span class="variable-name">nextLabel</span>() { <span class="keyword">return</span> _cur_label++; }
+    <span class="comment-delimiter">// </span><span class="comment">...</span>
+} 
+ </pre>
+
+Il faudra aussi générer du code pour les opérateurs relationnels, car on ne génère du code que pour <span class="string">'true'</span> et <span class="string">'false'</span> :
+   <pre><span class="antlr-ruledef">condition</span> <span class="antlr-keyword">returns</span> [String code]
+    <span class="antlr-keyword">:</span> <span class="string">'true'</span>  { <span class="antlr-keyword">$code</span> = <span class="string">"  PUSHI 1\n"</span>; }
+    <span class="antlr-keyword">|</span> <span class="string">'false'</span> { <span class="antlr-keyword">$code</span> = <span class="string">"  PUSHI 0\n"</span>; }
+    <span class="antlr-keyword">;</span>
+</pre>
+ou alors faites vos premiers tests avec 
+<pre>    while (true) i = i + 2;
+</pre>
+
+</div>
+
+<a id="bloc">  
+<h2>F - Bloc</h2>
+</a>
+<!-- Nous n'avons pas vraiment de mécanisme pour regrouper du code, hormis  -->
+<!-- pour en faire une fonction (voir exemples avec le nom de cette section). -->
+<!-- En particulier, nous ne pouvons pas faire de boucles <code>while</code> avec plus d'une instruction. -->
+<p>Pour pouvoir traiter une séquence d'instructions comme une seule 
+instruction, nous ajoutons maintenant la notion de bloc d'instructions 
+au langage de notre calculette.</p>
+<p>Un bloc se décrit comme une suite (éventuellement vide) d'instructions séparés par des  <code>;</code> et qui apparaît entre deux accolades <code>{ ... }</code>. </p> <!-- (comme pour le corps d'une fonction). -->
+<div class="question">Ajoutez l'analyse syntaxique des blocs.
+</div>
+
+<div class="question">Complétez la génération de code pour les blocs.
+</div>
+
+
+<a id="conds">
+<h2>G - Traitement des conditions de base</h2>
+</a>
+
+
+<div class="question">Ajoutez le traitement des conditions basées sur les opérateurs relationnels (égal <code>==</code>, différent  <code>!=</code> ou <code>&lt;&gt;</code>, inférieur  <code>&lt;</code>, supérieur <code>&gt;</code>, inférieur ou égal <code>&lt;=</code>, supérieur ou égal <code>&gt;=</code>).
+</div>
+
+<div class="etape">
+  Vous pouvez tester avec les benchs qui vous sont donnés.
+  Vous pouvez aussi en proposer d'autres, si vous pensez que c'est nécessaire.
+</div>
+
+<a id="boolExpr">
+<h2>H - Traitement des expressions logiques</h2>
+</a>
+
+Réfléchissez à la priorité des opérateurs logiques avant de faire la question ci-dessous (on rappelle en particulier que <code>&amp;&amp;</code> est prioritaire sur <code>||</code>).
+
+<div class="question">Ajoutez l'analyse syntaxique des opérateurs logiques <code>||</code> (disjonction) , <code>&amp;&amp;</code> (conjonction) et <code>!</code> (négation).
+</div>
+
+Comme la MVàP n'offre pas d'opcode pour faire du calcul booléen, il faut
+ simuler chaque opération booléenne par une ou plusieurs opérations 
+arithmétiques. 
+Comme indiqué ci-dessus, notre parti pris est de coder faux par 0. Pour 
+vrai, il est possible de choisir 1 ou encore le fait d'être différent de
+ 0.
+
+<div class="question">Ajoutez la génération de code pour ces opérateurs logiques.
+</div>
+
+Comme indiqué dans le TD7, il est possible de générer du code optimisé dans certains cas.
+<div class="etape">
+	Si vous arrivez à ce point avec du retard par rapport au déroulé normal
+ des TPs, nous vous conseillons de faire d'abord les parties <a href="#anaFunc">K</a> et <a href="#blocActivation">L</a> pour bénéficier de soutien pendant les TPs puis de reprendre le reste chez vous.
+</div>
+
+<a id="if">  
+<h2>I - Branchements</h2>
+</a>
+
+Pour l'instant notre calculette n'est pas très pratique puisque nous n'avons pas vraiment de mécanisme de branchement
+(certes le lecteur observateur nous fera remarquer que les boucles <code>while</code> suffisent, comme les exemples de cette section le montrent, mais nous voulons un langage raisonnable).
+
+La syntaxe est la suivante.
+<pre>  <code>
+    if (condition) intructionthen
+    else instructionelse.
+</code>
+</pre>
+La seconde ligne avec le else étant optionnelle.
+
+On autorisera évidemment les instructions de chaque branche à être des blocs.
+Notez l'absence volontaire de mot-clé <code>then</code>.
+
+
+<a id="for">  
+<h2>J - Le retour des boucles : le for et le repeat ... until</h2>
+</a>
+
+Notre langage reste peu pratique sans la célèbre boucle <code>for</code> parmi nos instructions, dont nous choisissons la syntaxe ci-dessous.
+<pre>  <code>
+    for( assignation ; condition ; assignation ) instruction
+  </code>
+</pre>
+De même pour la boucle <code>repeat ... until</code> que nous ajoutons avec la syntaxe ci-dessous.
+<pre>  <code>
+    repeat instruction until ( condition )
+  </code>
+</pre>
+
+
+<div class="etape">
+  Vous pouvez régler dès maintenant les types pour dépasser le cas des 
+simples variables entières.
+  Il faudra gérer les variables réelles (notez que pour les constantes, 
+c'est la présence d'un point qui distingue l'entier du flottant, par 
+exemple <code>2</code> vs <code>2.</code>).
+  Attention les réels sont supportés par la MVàP mais ils prennent 2 
+emplacements sur la pile au lieu d'1. 
+  
+  Vous pouvez aussi autoriser les variables booléennes et regrouper les 
+expressions de tout type, ensemble : les conditions deviennent alors 
+des expressions de type booléen. 
+
+  À terme, il est possible de permettre la conversion de type 
+(explicitement ou pas). Dans l'immédiat on se contentera de renvoyer une
+ erreur si une expression combine des types différents en insultant 
+copieusement l'utilisateur sur la sortie d'erreur avec un message 
+<!-- in -->approprié.
+</div>
+
+<a id="anaFunc">
+<h2>K - Analyse syntaxique des fonctions</h2>
+</a>
+
+
+<div class="alert"> Il faut lire le cours sur les fonctions et faire les
+ TD sur les fonctions pour se lancer dans cette partie. Bien préparée sur papier 
+cette étape prend entre 30 minutes et 1 heure à réaliser puisque tout le
+ code est donné. Il s'agit de comprendre l'esprit de la solution 
+proposée et de remplir les trous avec quelques lignes de java permettant
+ de générer du code MVàP.
+L'expérience montre qu'un étudiant allergique au cours et au papier peut
+ passer de nombreuses semaines à se torturer sans succès sur cette 
+partie. L'équipe enseignante décline donc toute responsabilité dans les 
+cas où cette étape n'est pas prise au sérieux. En cas de tentative 
+infructueuse sur papier, nous sommes ici pour vous aider et nous 
+tenterons de répondre à vos questions.
+</div>
+
+<div class="etape">
+  Cette section et la suivante vous guident pas mal.
+
+  Dans un premier temps, prenez un exemple de code MVàP d'une fonction 
+fabriquée en TD (ou prenez l'exemple du cours) et distribuez chaque 
+ligne de ce code MVàP sous forme de commentaire dans les nouvelles 
+règles de la grammaire ci-dessous, là où vous pensez que le code MVàP 
+doit prendre son origine.
+
+  Dans un second temps, vous pouvez réfléchir au processus de 
+compilation proprement dit. Imaginez que vous êtes la grammaire g4 et 
+que vous lisez le code de haut niveau qui deviendra le code MVàP. Que 
+faudra-t-il stocker et quand, pour pouvoir gérer tous les petits détails 
+(les adresses des variables etc) ? Une fois cette réflexion faite, vous 
+pouvez passer à la section suivante.
+</div>
+
+ <p>La grammaire suivante permet de reconnaître les déclarations de fonctions et leurs appels. 
+La règle <span class="antlr-ruledef">params</span> reconnaît les paramètres formels, 
+et la règle <span class="antlr-ruledef">args</span> reconnaît les paramètres effectifs. </p>
+
+
+    <pre><span class="antlr-ruledef">fonction</span> <span class="antlr-keyword">returns</span> [ String code ]
+    <span class="antlr-keyword">:</span> <span class="antlr-tokenref">TYPE</span> <span class="antlr-tokenref">IDENTIFIANT</span> <span class="string">'('</span>  <span class="antlr-ruleref">params</span> ? <span class="string">')'</span> 
+        { 
+            <span class="comment-delimiter">// </span><span class="comment">truc à faire par rapport au "type" de la fonction
+</span>        }
+        <span class="antlr-ruleref">bloc</span> 
+        {
+            <span class="comment-delimiter">// </span><span class="comment">corps de la fonction
+</span>        }
+    <span class="antlr-keyword">;</span>
+
+
+<span class="antlr-ruledef">params</span>
+    <span class="antlr-keyword">:</span> <span class="antlr-tokenref">TYPE</span> <span class="antlr-tokenref">IDENTIFIANT</span> 
+        { 
+            <span class="comment-delimiter">// </span><span class="comment">code java gérant la déclaration de "la variable" de retour de la fonction
+</span>        }  
+        <span class="antlr-keyword">(</span> <span class="string">','</span> <span class="antlr-tokenref">TYPE</span> <span class="antlr-tokenref">IDENTIFIANT</span> 
+            { 
+                <span class="comment-delimiter">// </span><span class="comment">code java gérant une variable locale (argi)
+</span>            } 
+        <span class="antlr-keyword">)*</span>
+    <span class="antlr-keyword">;</span>
+
+ <span class="comment-delimiter">// </span><span class="comment">init nécessaire à cause du ? final et donc args peut être vide (mais $args sera non null) 
+</span><span class="antlr-ruledef">args</span> <span class="antlr-keyword">returns</span> [ String code, <span class="type">int</span> <span class="variable-name">size</span>] @<span class="antlr-ruleref">init</span>{ <span class="antlr-keyword">$code</span> = <span class="keyword">new</span> <span class="type">String</span>(); <span class="antlr-keyword">$size</span> = 0; }
+    <span class="antlr-keyword">:</span> <span class="antlr-keyword">(</span> <span class="antlr-ruleref">expr</span> 
+    { 
+        <span class="comment-delimiter">// </span><span class="comment">code java pour première expression pour arg
+</span>    }
+    <span class="antlr-keyword">(</span> <span class="string">','</span> <span class="antlr-ruleref">expr</span> 
+    { 
+        <span class="comment-delimiter">// </span><span class="comment">code java pour expression suivante pour arg
+</span>    } 
+    <span class="antlr-keyword">)*</span> 
+      <span class="antlr-keyword">)?</span> 
+    <span class="antlr-keyword">;</span>
+
+<span class="antlr-ruledef">expr</span> <span class="antlr-keyword">returns</span> [ String code, <span class="type">String</span> <span class="variable-name">type</span> ]
+    <span class="antlr-keyword">:</span>
+    <span class="comment">//...</span>
+    | <span class="antlr-tokenref">IDENTIFIANT</span> <span class="string">'('</span> <span class="antlr-ruleref">args</span> <span class="string">')'</span>                  <span class="comment-delimiter">// </span><span class="comment">appel de fonction  
+</span>        {  
+       
+        }
+</pre>
+
+<p>On modifie également la règle calcul afin d'insérer la déclaration de
+fonction. </p>
+
+<pre><span class="antlr-ruledef">calcul</span> <span class="antlr-keyword">returns</span> [ String code ] 
+@<span class="antlr-ruleref">init</span>{ <span class="antlr-keyword">$code</span> = <span class="keyword">new</span> <span class="type">String</span>(); }   <span class="comment-delimiter">// </span><span class="comment">On initialise $code, pour ensuite l'utiliser comme accumulateur 
+</span>@<span class="antlr-ruleref">after</span>{ System.out.println(<span class="antlr-keyword">$code</span>); }
+    <span class="antlr-keyword">:</span>   <span class="antlr-keyword">(</span><span class="antlr-ruleref">decl</span> { <span class="antlr-keyword">$code</span> += <span class="antlr-keyword">$decl</span>.code; }<span class="antlr-keyword">)*</span>        
+        { <span class="type">in</span><span class="type">t</span> <span class="variable-name">entry</span> = nextLabel(); <span class="antlr-keyword">$code</span> += <span class="string">"  JUMP "</span> + entry + <span class="string">"\n"</span>; }
+        <span class="antlr-tokenref">NEWLINE</span>*
+        
+        <span class="antlr-keyword">(</span><span class="antlr-ruleref">fonction</span> { <span class="antlr-keyword">$code</span> += <span class="antlr-keyword">$fonction</span>.code; }<span class="antlr-keyword">)*</span> 
+        <span class="antlr-tokenref">NEWLINE</span>*
+        
+        { <span class="antlr-keyword">$code</span> += <span class="string">"LABEL "</span> + entry + <span class="string">"\n"</span>; }
+        <span class="antlr-keyword">(</span><span class="antlr-ruleref">instruction</span> { <span class="antlr-keyword">$code</span> += <span class="antlr-keyword">$instruction</span>.code; }<span class="antlr-keyword">)*</span>
+
+        { <span class="antlr-keyword">$code</span> += <span class="string">"  HALT\n"</span>; } 
+    <span class="antlr-keyword">;</span>
+</pre>
+
+<div class="question">
+  À quoi sert le <code>JUMP</code> introduit à la fin des déclarations
+  de variables ?
+</div>
+
+<a id="blocActivation">  
+<h2>L - Le bloc d'activation : paramètres, sortie etc</h2>
+</a>
+
+<div class="alert">
+  Cette section tente à la fois de vous faire comprendre ce que votre 
+code doit gérer comme petit détail et de vous expliquer comment le faire
+ avec nos classes <code>TablesSymboles</code> etc.
+  Les étudiants un peu perdus à ce stade ont tout intérêt à suivre cette
+ approche. Pour ceux qui pensent savoir comment gérer les détails et qui
+ ne comprennent pas rapidement comment utiliser ces classes, il est 
+probable que ce soit beaucoup plus faciles pour eux de se faire leur 
+propres classes. Par contre, l'équipe enseignante décline toute 
+responsabilité concernant les classes qui ne sont pas celles fournies 
+initialement : en gros, on veut bien vous aider 5 minutes, mais on ne va
+ pas passer la nuit à déboguer de telles classes annexes.
+</div>
+
+
+Les méthodes <code>putVar</code> et <code>getAdresseTypee</code> de <code>tablesSymboles</code> mémorisent 
+et retrouvent respectivement l'adresse+type d'une variable donnée par son identificateur. 
+Cette gestion peut se faire dans la table de hachage <code>tableGlobale</code> 
+ou prioritairement dans <code>tableLocale</code> si elle existe. 
+Cette dernière table est instanciée par l'appel à la méthode <code>newTableLocale</code> et détruite par celui de la méthode <code>dropTableLocale</code> 
+
+<p>
+
+ Les adresses des variables locales sont comptées négativement à partir de fp.
+ Vision de la pile:</p><pre>                                       fp
+                                       \/
+           ...  rr  p1  p2  ... pcr  fp(-1)
+ </pre>
+ où : <ul>
+    <li> rr est la place pour la valeur retournée par la fonction (éventuellement)
+    </li><li> p1 est la place du 1er paramètre 
+    </li><li> p2 est la place du 2e paramètre
+    </li><li> ...
+    </li><li> pcr est le compteur de programme (pc) au retour 
+                (là où il faut se brancher à la sortie de la fonction)  
+    </li><li> fp(-1) est la valeur du fp précédent (nécessaire pour restaurer l'environnement)  
+    </li><li> fp est la valeur du fp courant (c'est juste là où est stocké fp(-1))
+ </li></ul>
+ La distance dans la pile séparant la place de la variable locale correspondant
+ au premier paramètre  de la place pointée par le fp courant est donc égale : 
+ au nombre de paramètres de la fonction plus 2 (à cause de pc et fp qui sont empilés par <code>CALL</code>).
+<p>
+L'adresse par rapport à fp d'une variable est toujours négative et se 
+calcule comme :
+son rang, moins le nombre de paramètres, moins 2 (si on a des int 
+seulement, sinon il faut compter -1 ou -2 selon la taille prise par 
+chaque variable : ceci dépend du type de la variable. La classe <code>AdresseType</code> dispose d'une méthode publique pour trouver cette taille).
+
+</p><p>Une table des symboles de variables locales à une fonction est seulement 
+utile pendant la définition de cette fonction. Comme nous choisissons de ne pas autoriser 
+des définitions de fonctions imbriquées, une seule table des variables locales au plus est suffisante 
+à tout instant ; dans le cas contraire, il nous faudrait une pile de tables. 
+
+</p><p>Lors de la recherche d'une adresse d'une variable, il faudra d'abord chercher 
+dans la table des variables locales, puis, seulement si elle n'est pas trouvée 
+dans la table des variables globales. On a ainsi deux espaces de noms et une variable 
+locale peut masquer l'accès à une variable globale.  
+</p><p>Comme les adresses des variables locales sont négatives (par rapport à fp)
+et les adresses des variables globales sont positives, on peut facilement savoir si il faut 
+ appliquer <code>PUSHG</code> et <code>STOREG</code> au lieu de <code>PUSHL</code> et <code>STOREL</code> (ceci explique pourquoi notre classe <code>AdresseType</code>, ne stocke pas en plus un bit permettant de savoir si la variable est locale ou globale).
+
+</p><p>On a également dans <code>TablesSymboles</code>, les méthodes <code>newFunction</code> 
+et <code>getFunction</code> : la première sert de test+déclaration, la 
+seconde permet de récupérer l'adresse+type d'une fonction. Si vous 
+observez attentivement le code gérant la déclaration d'une nouvelle 
+fonction, vous allez mieux comprendre ce que représente l'adresse d'une 
+fonction et son intérêt.
+
+</p><p>
+ Notez que comme les table de symboles des fonctions et des variables sont distinctes, on peut créer une fonction
+de même nom qu'une variable.
+
+</p><p>
+Le code pour une fonction commence par son étiquette qui est suivi du code pour son bloc de définition. 
+Une table de variable locale est installée pendant la génération du code du bloc. 
+Cette table contient en plus des variables correspondant aux paramètres formels, 
+à la pseudo variable <span class="string">"return"</span> qui correspond à la valeur de retour de la fonction.
+Il ne peut pas y avoir de collision avec un paramètre car <span class="string">"return"</span> est un mot clé du langage.
+</p>
+
+<pre><span class="comment-delimiter">/</span><span class="comment-delimiter">/ </span><span class="comment">lexer
+</span><span class="antlr-tokendef">RETURN</span><span class="antlr-keyword">:</span> <span class="string">'return'</span>
+
+
+<span class="antlr-ruledef">instruction</span> <span class="antlr-keyword">returns</span> [ String code ] 
+        <span class="comment-delimiter">/</span><span class="comment-delimiter">/</span><span class="comment">...
+</span>  <span class="antlr-keyword">|</span> <span class="antlr-tokenref">RETURN</span> <span class="antlr-ruleref">expression</span> <span class="antlr-ruleref">finInstruction</span>    
+        {
+        }
+        <span class="comment-delimiter">// </span><span class="comment">...</span>
+</pre>
+
+<div class="question">Complétez la génération de code pour les appels de fonction.
+</div>
+<p>
+<em>Indication</em>: le non terminal <span class="antlr-ruleref">args</span>
+ va devoir synthétiser en plus d'un attribut de type String qui 
+contiendra le code pour empiler ces paramètres, un attribut de type int 
+qui contiendra (le nombre de paramètres si que des int et plus 
+généralement) la taille prise par les arguments dans le bloc 
+d'activation. 
+</p>
+
+<div class="etape">Pour rappel, vous pouvez tester votre travail. Des <i>benchmarks</i> sont disponibles  
+  <a href="https://terrier.users.greyc.fr/LangCompil/BMs/">ici</a> (le préfixe du nom d'un fichier correspond normalement au nom de section de ce TP):
+</div>
+
+<a id="float">
+<h2>M - Support minimal des flottants</h2>
+</a>
+
+Notre langage est pour le moment (sauf si vous y avez déjà travaillé) limité
+aux entiers. Nous allons maintenant introduire un support minimal (le
+support plus avancé fait parti des améliorations) pour les flottants: la
+syntaxe de la déclaration d'une variable est :
+
+<pre>  <code>
+    float x
+  </code>
+</pre>
+
+On demande d'ajouter la déclaration, la lecture et l'écriture de flottants.
+
+Pour le code MVaP, on dispose de <code>WRITEF</code> et de <code>READF</code>.
+Il est important de se rappeler que les flottants prennent 2 mots mémoire. 
+
+<a id="classique">  
+<h2>N - Tester sur quelques programmes classiques</h2>
+</a>
+
+Nous fournissons également des tests un peu plus ambitieux qui 
+nécessitent tous les ingrédients développés au cours de cette série de 
+TP. De nombreux exemples n'ont pas besoin de flottants, et seul de rares
+ exemples nécessitent le cast explicite.  
+
+<a id="etc">  
+<h2>O - Autres améliorations</h2>
+</a>
+
+Les éléments ci-dessus bien réalisés vous permettent d'obtenir une 
+mention bien au DM. Réaliser correctement et intelligemment une ou 
+plusieurs améliorations (selon leur difficulté et la qualité de votre 
+apport) vous permettront d'obtenir une meilleure note, voir la 
+reconnaissance bienveillante de l'équipe enseignante et le titre 
+d'expert en compilation en MVàP. Comme il s'agit de choses nouvelles et 
+non comprises dans les tests que nous vous donnons, il faudra que vous 
+proposiez des benchmarks adaptés. 
+
+<p>
+Ci-dessous quelques suggestions (elles ne sont pas classées par ordre de
+ difficulté, donc regarder les toutes avant de décider la ou lesquelles 
+faire).
+</p>
+
+<h3>Supporter plusieurs types</h3>
+Nous l'avons déjà évoqué. On peut enrichir la calculette afin de faire du calcul sur les flottants dans les expressions. 
+Les différents <em>opcodes</em> relatifs aux flottants sont explicités sur la <b>MVAP cheat sheet</b> sur la page du cours.
+L'analogue de <code>PUSHI</code> pour les flottants est <code>PUSHF</code>. Il faut se rappeler que
+les flottants utilisent 2 mots dans la MVàP donc l'analogue de <code>POP</code> est <code>POP POP</code>. 
+On peut faire des opérations arithmétiques sur les flottants avec <code>FADD,FSUB,FMUL,FDIV</code> et des comparaisons avec 
+<code>FINF,FINFEQ,FSUP,FSUPEQ, FEQUAL, FNEQ</code>.
+
+<p>Un autre type simple à mettre en oeuvre est le type booléen. Dans ce 
+cas, il suffit de transformer ce qu'on a appellé des conditions jusqu'à 
+présent en des expressions de type <code>bool</code>.
+
+</p><p>Il est fort utile de pouvoir faire explicitement des conversions explicites d'un type à l'autre.
+Pour les <code>bool</code> et les <code>int</code>, c'est indépendant de la représentation dans la MVàP.
+Pour les flottants qui sont gérés de manière native, la MVàP offre les deux opcodes suivants pour les conversions : <code>ITOF,FTOI</code>.
+
+</p><p>
+Vous pouvez regarder les benchmarks proposés, mais essentiellement il 
+s'agit de quelque chose de raisonnable et cohérent pour passer entre int
+ et float via la partie entière. Pour les booléens, comme on vous a 
+laissé partiellement le choix de leur représentation en MVàP par des 
+int, le comportement en écriture d'une variable 
+booléenne initialisée autrement que par true et false n'est pas normé. On
+ insiste juste pour que le cast d'une expression en tant que booléen se 
+comporte comme false ssi l'expression vaut <code>0</code> (int) ou <code>0.</code> (float). 
+
+</p><h3>Casts implicites</h3>
+Si l'utilisateur mélange plusieurs types dans une expression, mettez un 
+warning sur la sortie d'erreur et faites un cast de manière raisonnable.
+
+<h3>Autoriser les tableaux</h3>
+Support de tableaux. En particulier, leur déclaration, comment on y 
+accède ? et la question intéressante : comment proposez vous de gérer les
+ tableaux comme argument d'une fonction ?
+ Il est probable que <code>STORER</code> et <code>PUSHR</code> soit des instructions utiles.
+
+<h3>Break/continue dans les boucles</h3>
+Étendre au moins un mécanisme d'itération avec les break/continue, par exemple le for.
+
+<h3>Un peu de tolérance : compilation pour les humains</h3>
+Un bon compilateur essaye de réparer les faiblesses des humains et se 
+montre en général assez tolérant, tout en émettant des mises en garde 
+(warnings en franglais). 
+<ul>
+  <li>Déclaration de variables si implicites dans le code avec génération de warnings)</li>
+  <li>Plus généralement, rendre l'ordre des déclarations de variables et des fonctions plus flexibles.</li>
+  <li>Détection d'incohérence, comme par exemple un <code>return</code> dans le main</li>
+  <li>Tentative de détection de problèmes (pas de return dans toutes les branches d'une fonction, while sans condition, etc)</li>
+</ul>
+
+<h3>Optimisation</h3>
+Support d'un ou plusieurs mécanismes simples d'optimisation évoqués en cours.
+<ul>
+  <li>détection et suppression de code mort</li>
+  <li>propagation de constantes</li>
+  <li>dépliage de boucles constantes</li>
+  <li>...</li>
+</ul>
+
+<h3>Déclarations un peu partout</h3>
+En particulier, déclarer des fonctions localement à une fonction (titre 
+d'expert en MVàP garanti).
+Indication : utiliser des piles de tables de symboles; ajoutez en 3ème 
+champs dans le bloc d'activation de la pile (en plus de pcr et oldfp) la
+ valeur de pc après avoir lu le label de la fonction ; employez <code>STORER</code> 
+et <code>PUSHR</code> qui permettent de faire des actions relativement à une adresse 
+écrite sur la pile.
+
+
+
+</body></html>
